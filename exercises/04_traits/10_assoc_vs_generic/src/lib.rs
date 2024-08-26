@@ -14,35 +14,74 @@
 // implementations manually. Venture further only if you're curious.
 
 // 後でじっくり読んでみる
-pub trait Power<Exponent = Self> {
-    type Output;
+// pub trait Power<Exponent = Self> {
+//     type Output;
 
-    fn power(&self, n: Exponent) -> Self::Output;
-}
+//     fn power(&self, n: Exponent) -> Self::Output;
+// }
 
-impl Power<u16> for u32 {
-    type Output = u32;
+// impl Power<u16> for u32 {
+//     type Output = u32;
 
-    fn power(&self, n: u16) -> Self::Output {
-        self.pow(n.into())
+//     fn power(&self, n: u16) -> Self::Output {
+//         self.pow(n.into())
+//     }
+// }
+
+// impl Power<&u32> for u32 {
+//     type Output = u32;
+
+//     fn power(&self, n: &u32) -> Self::Output {
+//         self.power(*n)
+//     }
+// }
+
+// impl Power<u32> for u32 {
+//     type Output = u32;
+
+//     fn power(&self, n: u32) -> Self::Output {
+//         self.pow(n)
+//     }
+// }
+
+use num::Num;
+use std::collections::HashMap;
+use std::hash::Hash;
+
+fn power_inner<N>(n: N, e: u32) -> N
+where
+    N: Num + Hash + Eq + Clone + Copy + std::fmt::Debug,
+{
+    if e == 0 {
+        return N::one();
     }
-}
 
-impl Power<&u32> for u32 {
-    type Output = u32;
-
-    fn power(&self, n: &u32) -> Self::Output {
-        self.power(*n)
+    if e == 1 {
+        return n;
     }
+
+    let vv = power_inner(n, e / 2);
+
+    let v = vv * vv * if e % 2 == 0 { N::one() } else { n };
+
+    v
 }
 
-impl Power<u32> for u32 {
-    type Output = u32;
-
-    fn power(&self, n: u32) -> Self::Output {
-        self.pow(n)
-    }
+trait Power<RHS = Self>: Num + Hash + Eq + Clone + Copy {
+    fn power(self, rhs: RHS) -> Self;
 }
+
+macro_rules! power_impl {
+    ( $(($t:ty, $r:ty))* ) => {$(
+        impl Power<$r> for $t {
+            fn power(self, rhs: $r) -> Self {
+                power_inner(self, rhs.clone().into())
+            }
+        }
+    )*}
+}
+
+power_impl!((u32, u32)(u32, u16)(u32, &u32)(u128, u32));
 
 #[cfg(test)]
 mod tests {
