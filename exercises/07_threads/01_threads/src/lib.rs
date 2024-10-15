@@ -14,8 +14,18 @@
 // this is necessary in the next exercise.
 use std::thread;
 
-pub fn sum(v: Vec<i32>) -> i32 {
-    todo!()
+pub fn sum(mut v: Vec<i32>) -> i32 {
+    // let v2 = v.split_off(v.len() / 2);
+    // Clone トレイトを要求しないバージョン↓
+    let v2: Vec<i32> = v.drain((v.len() / 2)..).collect();
+
+    let t1 = thread::spawn(move || v.iter().sum::<i32>());
+    let t2 = thread::spawn(move || v2.iter().sum::<i32>());
+
+    let res1 = t1.join().unwrap();
+    let res2 = t2.join().unwrap();
+
+    res1 + res2
 }
 
 #[cfg(test)]
